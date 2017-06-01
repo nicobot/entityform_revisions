@@ -5,3 +5,11 @@
  * Module for the Entityform revisions
  */
 
+/**
+ * Implements hook_entity_info_alter().
+ */
+function entityform_revisions_entity_info_alter(&$entity_info) {
+  // Set the revision table for entityforms to store revisions
+  $entity_info['entityform']['revision table'] = 'entityform_revision';
+  $entity_info['entityform']['revision'] = 'vid';
+}

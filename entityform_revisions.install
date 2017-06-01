@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ *
+ * @ingroup schemaapi
+ */
+function entityform_revisions_schema() {
+  $schema['entityform_revision'] = array(
+    'description' => 'Keeps track of entityform revisions.',
+    'fields' => array(
+      'entityform_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Entityform id (entity id).',
+      ),
+      'vid' => array(
+        'description' => 'The current {entityform_revision}.vid version identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the entityform was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('entityform_id', 'vid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_schema_alter().
+ *
+ * @ingroup schemaapi
+ */
+function entityform_revisions_schema_alter(&$schema) {
+  if (isset($schema['entityform'])) {
+    $schema['entityform']['fields']['vid'] = array(
+      'description' => 'The current {entityform_revision}.vid version identifier.',
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    );
+  }
+}
+
+/**
+ * Implements hook_install().
+ */
+function entityform_revisions_install() {
+  $entityform_revisions_schema = array(
+    'entityform' => array()
+  );
+
+  entityform_revisions_schema_alter($entityform_revisions_schema);
+
+  foreach($entityform_revisions_schema['entityform']['fields'] as $name => $field) {
+    db_add_field('entityform', $name, $field);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function entityform_revisions_uninstall() {
+  $entityform_revisions_schema = array(
+    'entityform' => array()
+  );
+
+  entityform_revisions_schema_alter($entityform_revisions_schema);
+
+  foreach($entityform_revisions_schema['entityform']['fields'] as $name => $field) {
+    db_drop_field('entityform', $name, $field);
+  }
+}
