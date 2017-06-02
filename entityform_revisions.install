@@ -77,6 +77,6 @@ function entityform_revisions_uninstall() {
   entityform_revisions_schema_alter($entityform_revisions_schema);
 
   foreach($entityform_revisions_schema['entityform']['fields'] as $name => $field) {
-    db_drop_field('entityform', $name, $field);
+    db_drop_field('entityform', $name);
   }
 }

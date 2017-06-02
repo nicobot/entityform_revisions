@@ -33,25 +33,22 @@ function entityform_revisions_entity_info_alter(&$entity_info) {
   $entity_info['entityform']['revision table'] = 'entityform_revision';
   $entity_info['entityform']['revision'] = 'vid';
   $entity_info['entityform']['entity keys']['revision'] = 'vid';
-}
 
+  $entity_info['entityform']['admin ui']['controller class'] = 'EntityformRevisionsUIController';
+}
 
 /**
  * Implements hook_permission().
  */
 function entityform_revisions_permission() {
   return array(
-    'administer entityform revisions' => array(
-      'title' => t('Administer entityform revisions'),
-      'description' => t('Perform administration tasks for entityform revisions.'),
-    ),
     'view entityform revisions' => array(
       'title' => t('View entityform revisions'),
       'description' => t('Access to view entityform_revisions.'),
     ),
-    'revert entityform revisions' => array(
-      'title' => t('Revert entityform revisions'),
-      'description' => t('Reverts an entityform revision.'),
+    'edit entityform revisions' => array(
+      'title' => t('Edit entityform revisions'),
+      'description' => t('Edit an entityform revision.'),
     ),
     'delete entityform revisions' => array(
       'title' => t('Delete entityform revisions'),
@@ -71,8 +68,6 @@ function entityform_revisions_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id === 'entityform_edit_form') {
     $entity = $form_state['entityform'];
 
-    $entity_type = $entity->getTypeName();
-
     if (!empty($entity)) {
       $is_current = empty($entity->current_revision_id) || $entity->current_revision;
       $entity_id = $entity->identifier();
@@ -91,11 +86,11 @@ function entityform_revisions_form_alter(&$form, &$form_state, $form_id) {
       ENTITY_REVISION_CREATE_NO_USE => t('Create new revision'),
     );
 
-    if (!$is_current && !entity_access('use', $entity_type, $entity)) {
+    if (!$is_current && !entityform_revisions_access('edit', $entity)) {
       unset($options[ENTITY_REVISION_UPDATE_AND_USE]);
       unset($options[ENTITY_REVISION_CREATE_AND_USE]);
     }
-    if (empty($entity_id) || !entity_access('create', $entity_type, $entity)) {
+    if (empty($entity_id) || !entityform_revisions_access('edit', $entity)) {
       unset($options[ENTITY_REVISION_CREATE_AND_USE]);
       unset($options[ENTITY_REVISION_CREATE_NO_USE]);
     }
@@ -159,14 +154,45 @@ function entityform_revision_form_submit(&$form, &$form_state) {
 }
 
 /**
- * Check permissions
+ * Entityform revisions access controlling
  *
- * @var $op
- *  The operation being performed. One of 'view', 'update', 'create', 'delete'
- *  or just 'edit' (being the same as 'create' or 'update').
+ * @param $op
+ *  The operation being performed. One of 'view', 'delete', 'edit'
+ * @param $entityform
+ *  The entityform that is being analized (currently not supported)
+ * @return bool
  */
-function entityform_revisions_entityform_access_alter($access, $op, $context) {
-  // @todo add access control
-  $entityform = $context['entityform'];
-  $account = $context['account'];
+function entityform_revisions_access($op, $entityform) {
+  global $user;
+  return user_access($op . ' entityform revisions', $user);
+}
+
+/**
+ * Fetches a revision from an entityform
+ *
+ * @param $entityform
+ * @param $vid
+ *
+ * @return bool|mixed
+ */
+function entityform_get_revision($entityform, $vid) {
+
+  if ($entityform instanceof Entityform) {
+    $entityform_id = $entityform->identifier();
+  } else {
+    $entityform_id = $entityform;
+  }
+
+  /**
+   * @var $controller EntityformController
+   */
+  $controller = entity_get_controller('entityform');
+  $entities = $controller->load(array($entityform_id), array('vid' => $vid));
+
+  if (!empty($entities)) {
+    $revision = reset($entities);
+    return $revision;
+  }
+
+  return FALSE;
 }

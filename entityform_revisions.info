@@ -4,3 +4,5 @@ core = 7.x
 package = Entityforms
 
 dependencies[] = entityform
+
+files[] = EntityformRevisionsUIController.inc
