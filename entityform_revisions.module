@@ -35,6 +35,20 @@ function entityform_revisions_entity_info_alter(&$entity_info) {
   $entity_info['entityform']['entity keys']['revision'] = 'vid';
 
   $entity_info['entityform']['admin ui']['controller class'] = 'EntityformRevisionsUIController';
+
+  // entity_get_info() is only calling this alter, after preparing its structure.
+  // Since we're adding a revision table, the information of schema_fields_sql is not complete
+  // therefore, we need to manually adjust it repeating the same process:
+
+  // Prepare entity schema fields SQL info for
+  // DrupalEntityControllerInterface::buildQuery().
+  if (isset($entity_info['entityform']['base table'])) {
+    $entity_info['entityform']['base table field types'] = drupal_schema_field_types($entity_info['entityform']['base table']);
+    $entity_info['entityform']['schema_fields_sql']['base table'] = drupal_schema_fields_sql($entity_info['entityform']['base table']);
+    if (isset($entity_info['entityform']['revision table'])) {
+      $entity_info['entityform']['schema_fields_sql']['revision table'] = drupal_schema_fields_sql($entity_info['entityform']['revision table']);
+    }
+  }
 }
 
 /**
