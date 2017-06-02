@@ -22,6 +22,18 @@ function entityform_revisions_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'uid' => array(
+        'description' => 'The {users}.uid that created this version.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'log' => array(
+        'description' => 'The log entry explaining the changes in this version.',
+        'type' => 'text',
+        'size' => 'big',
+        'default' => '',
+      ),
       'changed' => array(
         'description' => 'The Unix timestamp when the entityform was most recently saved.',
         'type' => 'int',

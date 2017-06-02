@@ -22,20 +22,30 @@ class EntityformRevisionsUIController extends EntityformUIController {
       'file path' => drupal_get_path('module', 'entityform_revisions'),
     );
 
+    $items['entityform/' . $wildcard . '/revisions'] = array(
+      'title' => 'Revisions',
+      'page callback' => 'entityform_revision_overview',
+      'page arguments' => array(1),
+      'access callback' => 'entityform_revisions_access',
+      'access arguments' => array('edit', 1),
+      'weight' => 2,
+      'type' => MENU_LOCAL_TASK,
+    ) + $base;
+
     // Loading and editing entityform revisions.
-    $items['entityform/' . $wildcard . '/%'] = array(
+    $items['entityform/' . $wildcard . '/revisions/%'] = array(
       'page callback' => 'entityform_revision_form_wrapper',
-      'page arguments' => array(1, 2),
+      'page arguments' => array(1, 3),
       'access callback' => 'entityform_revisions_access',
       'access arguments' => array('edit', 1),
       'weight' => 0,
       'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     ) + $base;
 
-    $items['entityform/' . $wildcard . '/%/edit'] = array(
+    $items['entityform/' . $wildcard . '/revisions/%/edit'] = array(
       'title' => 'Edit revision',
       'page callback' => 'entityform_revision_form_wrapper',
-      'page arguments' => array(1, 2, 'edit'),
+      'page arguments' => array(1, 3, 'edit'),
       'access callback' => 'entityform_access',
       'access arguments' => array('edit', 1),
       'weight' => 0,
@@ -43,10 +53,10 @@ class EntityformRevisionsUIController extends EntityformUIController {
       'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     ) + $base;
 
-    $items['entityform/' . $wildcard . '/%/delete'] = array(
+    $items['entityform/' . $wildcard . '/revisions/%/delete'] = array(
       'title' => 'Delete revision',
-      'page callback' => 'entityform_revision_delete_form_wrapper',
-      'page arguments' => array(1, 2),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('entityform_revision_delete_confirm', 1, 3),
       'access callback' => 'entityform_revisions_access',
       'access arguments' => array('delete', 1),
       'type' => MENU_LOCAL_TASK,
@@ -54,18 +64,30 @@ class EntityformRevisionsUIController extends EntityformUIController {
       'weight' => 10,
     ) + $base;
 
+    $items['entityform/' . $wildcard . '/revisions/%/revert'] = array(
+      'title' => 'Delete revision',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('entityform_revision_revert_confirm', 1, 3),
+      'access callback' => 'entityform_revisions_access',
+      'access arguments' => array('revert', 1),
+      'type' => MENU_LOCAL_TASK,
+      'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+      'weight' => 10,
+    ) + $base;
+
     // Menu item for viewing entityforms revisions.
-    $items['entityform/' . $wildcard . '/%'] = array(
+    $items['entityform/' . $wildcard . '/revisions/%'] = array(
       //'title' => 'Title',
       'title callback' => 'entityform_page_title',
       'title arguments' => array(1),
       'page callback' => 'entityform_revision_page_view',
-      'page arguments' => array(1, 2),
+      'page arguments' => array(1, 3),
       'access callback' => 'entityform_revisions_access',
       'access arguments' => array('view', 1),
       'type' => MENU_CALLBACK,
     ) + $base;
-    $items['entityform/' . $wildcard . '/%/view'] = array(
+
+    $items['entityform/' . $wildcard . '/revisions/%/view'] = array(
       'title' => 'View revision',
       'type' => MENU_DEFAULT_LOCAL_TASK,
       'weight' => -10,

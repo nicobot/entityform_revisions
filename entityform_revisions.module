@@ -68,6 +68,10 @@ function entityform_revisions_permission() {
       'title' => t('Delete entityform revisions'),
       'description' => t('Deletes entityform revisions.'),
     ),
+    'revert entityform revisions' => array(
+      'title' => t('Revert entityform revisions'),
+      'description' => t('Revert entityform revisions.'),
+    ),
   );
 }
 
@@ -120,12 +124,26 @@ function entityform_revisions_form_alter(&$form, &$form_state, $form_id) {
     );
 
     $default = isset($entity->revision, $options[(int) $entity->revision]) ? (int) $entity->revision : key($options);
+
+    $revision_fieldset['revision_info'] = array(
+      '#type' => 'markup',
+      '#markup' => $is_current ? t('This is the current version') : t('This is not the current version'),
+    );
+
     $revision_fieldset['revision'] = array(
       '#type' => 'radios',
       '#title' => t('Create new revision'),
       '#options' => $options,
       '#default_value' => $default,
       '#access' => count($options) > 1,
+    );
+
+    $revision_fieldset['log'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Revision log message'),
+      '#rows' => 4,
+      '#default_value' => !empty($entity->log) ? $entity->log : '',
+      '#description' => t('Provide an explanation of the changes you are making. This will help other authors understand your motivations.'),
     );
 
     if (empty($form['revision_fieldset'])) {
