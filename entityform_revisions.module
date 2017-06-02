@@ -6,6 +6,26 @@
  */
 
 /**
+ * Entity revision action status - update current, make it actual.
+ */
+define('ENTITY_REVISION_UPDATE_AND_USE', 0);
+
+/**
+ * Entity revision action status - create new revision, make it actual.
+ */
+define('ENTITY_REVISION_CREATE_AND_USE', 1);
+
+/**
+ * Entity revision action status - update current revision.
+ */
+define('ENTITY_REVISION_UPDATE_NO_USE', 2);
+
+/**
+ * Entity revision action status - create new revision.
+ */
+define('ENTITY_REVISION_CREATE_NO_USE', 3);
+
+/**
  * Implements hook_entity_info_alter().
  */
 function entityform_revisions_entity_info_alter(&$entity_info) {
@@ -13,4 +33,140 @@ function entityform_revisions_entity_info_alter(&$entity_info) {
   $entity_info['entityform']['revision table'] = 'entityform_revision';
   $entity_info['entityform']['revision'] = 'vid';
   $entity_info['entityform']['entity keys']['revision'] = 'vid';
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function entityform_revisions_permission() {
+  return array(
+    'administer entityform revisions' => array(
+      'title' => t('Administer entityform revisions'),
+      'description' => t('Perform administration tasks for entityform revisions.'),
+    ),
+    'view entityform revisions' => array(
+      'title' => t('View entityform revisions'),
+      'description' => t('Access to view entityform_revisions.'),
+    ),
+    'revert entityform revisions' => array(
+      'title' => t('Revert entityform revisions'),
+      'description' => t('Reverts an entityform revision.'),
+    ),
+    'delete entityform revisions' => array(
+      'title' => t('Delete entityform revisions'),
+      'description' => t('Deletes entityform revisions.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function entityform_revisions_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form_state['build_info']['base_form_id'])) {
+    $form_id = $form_state['build_info']['base_form_id'];
+  }
+
+  if ($form_id === 'entityform_edit_form') {
+    $entity = $form_state['entityform'];
+
+    $entity_type = $entity->getTypeName();
+
+    if (!empty($entity)) {
+      $is_current = empty($entity->current_revision_id) || $entity->current_revision;
+      $entity_id = $entity->identifier();
+    }
+    else {
+      $is_current = TRUE;
+      $entity_id = NULL;
+      $entity = NULL;
+    }
+
+    // Add revisions section to the form.
+    $options = array(
+      ENTITY_REVISION_UPDATE_AND_USE => $is_current ? t('Save content') : t('Save revision and use it'),
+      ENTITY_REVISION_CREATE_AND_USE => t('Create new revision and use it'),
+      ENTITY_REVISION_UPDATE_NO_USE => t('Save revision'),
+      ENTITY_REVISION_CREATE_NO_USE => t('Create new revision'),
+    );
+
+    if (!$is_current && !entity_access('use', $entity_type, $entity)) {
+      unset($options[ENTITY_REVISION_UPDATE_AND_USE]);
+      unset($options[ENTITY_REVISION_CREATE_AND_USE]);
+    }
+    if (empty($entity_id) || !entity_access('create', $entity_type, $entity)) {
+      unset($options[ENTITY_REVISION_CREATE_AND_USE]);
+      unset($options[ENTITY_REVISION_CREATE_NO_USE]);
+    }
+    if ($is_current) {
+      unset($options[ENTITY_REVISION_UPDATE_NO_USE]);
+    }
+
+    $revision_fieldset = array(
+      '#type' => 'fieldset',
+      '#title' => t('Revision information'),
+      '#collapsible' => TRUE,
+      '#weight' => 20,
+    );
+
+    $default = isset($entity->revision, $options[(int) $entity->revision]) ? (int) $entity->revision : key($options);
+    $revision_fieldset['revision'] = array(
+      '#type' => 'radios',
+      '#title' => t('Create new revision'),
+      '#options' => $options,
+      '#default_value' => $default,
+      '#access' => count($options) > 1,
+    );
+
+    if (empty($form['revision_fieldset'])) {
+      $form['revision_fieldset'] = $revision_fieldset;
+    }
+    else {
+      $form['revision_fieldset'] = $revision_fieldset + $form['revision_fieldset'];
+    }
+
+    array_unshift($form['actions']['save']['#submit'], 'entityform_revision_form_submit');
+  }
+}
+
+/**
+ * Form API submit callback for the entityform revision form.
+ */
+function entityform_revision_form_submit(&$form, &$form_state) {
+  $entity = $form['#entity'];
+
+  if (isset($form_state['values']['revision'])) {
+    switch ($form_state['values']['revision']) {
+      case ENTITY_REVISION_UPDATE_AND_USE:
+        $entity->default_revision = TRUE;
+        $entity->is_new_revision = FALSE;
+        break;
+      case ENTITY_REVISION_CREATE_AND_USE:
+        $entity->default_revision = TRUE;
+        $entity->is_new_revision = TRUE;
+        break;
+      case ENTITY_REVISION_UPDATE_NO_USE:
+        $entity->default_revision = FALSE;
+        $entity->is_new_revision = FALSE;
+        break;
+      case ENTITY_REVISION_CREATE_NO_USE:
+        $entity->default_revision = FALSE;
+        $entity->is_new_revision = TRUE;
+        break;
+    }
+  }
+}
+
+/**
+ * Check permissions
+ *
+ * @var $op
+ *  The operation being performed. One of 'view', 'update', 'create', 'delete'
+ *  or just 'edit' (being the same as 'create' or 'update').
+ */
+function entityform_revisions_entityform_access_alter($access, $op, $context) {
+  // @todo add access control
+  $entityform = $context['entityform'];
+  $account = $context['account'];
 }
