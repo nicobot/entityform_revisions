@@ -34,6 +34,7 @@ function entityform_revisions_entity_info_alter(&$entity_info) {
   $entity_info['entityform']['revision'] = 'vid';
   $entity_info['entityform']['entity keys']['revision'] = 'vid';
 
+  $entity_info['entityform']['controller class'] = 'EntityformRevisionsController';
   $entity_info['entityform']['admin ui']['controller class'] = 'EntityformRevisionsUIController';
 
   // entity_get_info() is only calling this alter, after preparing its structure.
@@ -227,4 +228,49 @@ function entityform_get_revision($entityform, $vid) {
   }
 
   return FALSE;
+}
+
+/**
+ * Returns a list of all the existing revision numbers.
+ *
+ * @param \Entityform $entityform
+ *   The entityform object.
+ *
+ * @return array
+ *   An associative array keyed by entityform revision number.
+ */
+function entityform_revision_list($entityform) {
+  $revisions = array();
+  $result = db_query('SELECT r.vid, r.log, r.uid, ef.vid AS current_vid, r.changed, u.name FROM {entityform_revision} r LEFT JOIN {entityform} ef ON ef.vid = r.vid INNER JOIN {users} u ON u.uid = r.uid WHERE r.entityform_id = :entityform_id ORDER BY r.vid DESC', array(':entityform_id' => $entityform->identifier()));
+  foreach ($result as $revision) {
+    $revisions[$revision->vid] = $revision;
+  }
+  return $revisions;
+}
+
+/**
+ * Implements hook_entity_diff().
+ */
+function entityform_revisions_entity_diff($old_entityform, $new_entityform, $context) {
+  $result = array();
+  if ($context['entity_type'] == 'entityform') {
+    $fields = field_info_instances('entityform', $new_entityform->bundle());
+    $old = $old_entityform->wrapper();
+    $new = $new_entityform->wrapper();
+
+    foreach ($fields as $key => $field) {
+      $row = array(
+        '#name' => $field['label'],
+        '#states' => array(),
+        '#settings' => array(),
+      );
+      foreach ($context['states'] as $state) {
+        $row['#states'][$state] = array(
+          '#old' => array($old->{$key}->value()),
+          '#new' => array($new->{$key}->value()),
+        );
+      }
+    }
+  }
+  return $result;
 }

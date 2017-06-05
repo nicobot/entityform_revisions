@@ -6,6 +6,8 @@
  */
 
 /**
+ * Page callback that displays an entity revision
+ *
  * @param $entityform
  * @param $vid
  * @param string $view_mode
@@ -49,6 +51,8 @@ function entityform_revision_form_wrapper($entityform, $vid, $mode = 'submit', $
 }
 
 /**
+ * Page callback that shows the delete entity revision form
+ *
  * @param $entityform \Entityform
  * @param $vid
  *
@@ -63,24 +67,24 @@ function entityform_revision_delete_form_wrapper($entityform, $vid) {
 }
 
 /**
- * Returns a list of all the existing revision numbers.
+ * Generates an overview table of older revisions of an entityform.
  *
  * @param $entityform
- *   The entityform object.
+ *   An entityform object.
  *
- * @return
- *   An associative array keyed by entityform revision number.
+ * @return array
+ *   A drupal render form or a renderable array.
  */
-function entityform_revision_list($entityform) {
-  $revisions = array();
-  $result = db_query('SELECT r.vid, r.log, r.uid, ef.vid AS current_vid, r.changed, u.name FROM {entityform_revision} r LEFT JOIN {entityform} ef ON ef.vid = r.vid INNER JOIN {users} u ON u.uid = r.uid WHERE r.entityform_id = :entityform_id ORDER BY r.vid DESC', array(':entityform_id' => $entityform->identifier()));
-  foreach ($result as $revision) {
-    $revisions[$revision->vid] = $revision;
+function entityform_revision_overview($entityform) {
+  drupal_set_title(t('Entityform revisions', array()), PASS_THROUGH);
+  if (module_exists('diff')) {
+    module_load_include('inc', 'entityform_revisions', 'entityform_revisions.diff');
+    $return = drupal_get_form('entityform_revision_overview_form', $entityform);
+  } else {
+    $return = entityform_revision_overview_navigate($entityform);
   }
-
-  return $revisions;
+  return $return;
 }
-
 
 /**
  * Generates an overview table of older revisions of an entityform.
@@ -89,10 +93,9 @@ function entityform_revision_list($entityform) {
  *   An entityform object.
  *
  * @return array
- *   An array as expected by drupal_render().
+ *   An array structure to be render as drupal_render expects.
  */
-function entityform_revision_overview($entityform) {
-  drupal_set_title(t('Entityform revisions', array()), PASS_THROUGH);
+function entityform_revision_overview_navigate($entityform) {
 
   $header = array(t('vid'), t('Revision'), array('data' => t('Operations'), 'colspan' => 2));
 
@@ -114,16 +117,17 @@ function entityform_revision_overview($entityform) {
     $operations = array();
 
     $row[] = $revision->vid;
+    $revision_log = ($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log, $allowed_tags) . '</p>' : '';
     if ($revision->current_vid > 0) {
       $row[] = array(
-        'data' => t('!date by !username', array('!date' => l(format_date($revision->changed, 'short'), "entityform/" . $entityform->identifier()), '!username' => theme('username', array('account' => $revision))))
-        . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log, $allowed_tags) . '</p>' : ''),
+        'data' => t('!date by !username', array('!date' => l(format_date($revision->revision_changed, 'short'), "entityform/" . $entityform->identifier()), '!username' => theme('username', array('account' => $revision))))
+        . $revision_log,
         'class' => array('revision-current'));
       $operations[] = array('data' => drupal_placeholder(t('current revision')), 'class' => array('revision-current'), 'colspan' => 2);
     }
     else {
-      $row[] = t('!date by !username', array('!date' => l(format_date($revision->changed, 'short'), "entityform/" . $entityform->identifier() . "/revisions/$revision->vid/view"), '!username' => theme('username', array('account' => $revision))))
-        . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log, $allowed_tags) . '</p>' : '');
+      $row[] = t('!date by !username', array('!date' => l(format_date($revision->revision_changed, 'short'), "entityform/" . $entityform->identifier() . "/revisions/$revision->vid/view"), '!username' => theme('username', array('account' => $revision))))
+        . $revision_log;
       if ($revert_permission) {
         $operations[] = l(t('revert'), "entityform/" . $entityform->identifier() . "/revisions/$revision->vid/revert");
       }
@@ -142,7 +146,6 @@ function entityform_revision_overview($entityform) {
 
   return $build;
 }
-
 
 /**
  * Asks for confirmation of the reversion to prevent against CSRF attacks.

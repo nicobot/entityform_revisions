@@ -93,6 +93,20 @@ class EntityformRevisionsUIController extends EntityformUIController {
       'weight' => -10,
     );
 
+    if (module_exists('diff')) {
+      $items['entityform/' . $wildcard . '/revisions/view'] = array(
+        'title' => 'Compare revisions',
+        'page callback' => 'entityform_revisions_diff_diffs_show',
+        'page arguments' => array(1, 4, 5, 6),
+        'type' => MENU_LOCAL_TASK,
+        'access callback' => 'entityform_revisions_access',
+        'access arguments' => array('view', 1),
+        'tab_parent' => 'entityform/' . $wildcard . '/revisions/list',
+        'file' => 'entityform_revisions.diff.inc',
+        'file path' => drupal_get_path('module', 'entityform_revisions'),
+      );
+    }
+
     return $items;
   }
 }
