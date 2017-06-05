@@ -120,13 +120,13 @@ function entityform_revision_overview_navigate($entityform) {
     $revision_log = ($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log, $allowed_tags) . '</p>' : '';
     if ($revision->current_vid > 0) {
       $row[] = array(
-        'data' => t('!date by !username', array('!date' => l(format_date($revision->revision_changed, 'short'), "entityform/" . $entityform->identifier()), '!username' => theme('username', array('account' => $revision))))
+        'data' => t('!date by !username', array('!date' => l(format_date($revision->changed, 'short'), "entityform/" . $entityform->identifier()), '!username' => theme('username', array('account' => $revision))))
         . $revision_log,
         'class' => array('revision-current'));
       $operations[] = array('data' => drupal_placeholder(t('current revision')), 'class' => array('revision-current'), 'colspan' => 2);
     }
     else {
-      $row[] = t('!date by !username', array('!date' => l(format_date($revision->revision_changed, 'short'), "entityform/" . $entityform->identifier() . "/revisions/$revision->vid/view"), '!username' => theme('username', array('account' => $revision))))
+      $row[] = t('!date by !username', array('!date' => l(format_date($revision->changed, 'short'), "entityform/" . $entityform->identifier() . "/revisions/$revision->vid/view"), '!username' => theme('username', array('account' => $revision))))
         . $revision_log;
       if ($revert_permission) {
         $operations[] = l(t('revert'), "entityform/" . $entityform->identifier() . "/revisions/$revision->vid/revert");

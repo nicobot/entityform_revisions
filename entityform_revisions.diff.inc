@@ -48,7 +48,7 @@ function entityform_revision_overview_form($form, $form_state, $entityform) {
         '#markup' =>
           t('!date by !username',
             array(
-              '!date' => l(format_date($revision->revision_changed, 'short'), "entityform/" . $entityform->identifier()),
+              '!date' => l(format_date($revision->changed, 'short'), "entityform/" . $entityform->identifier()),
               '!username' => theme('username', array('account' => $revision)))
           ) . $revision_log,
       );
@@ -58,7 +58,7 @@ function entityform_revision_overview_form($form, $form_state, $entityform) {
     }
     else {
       $diff_date = l(
-        format_date($revision->revision_changed, 'small'),
+        format_date($revision->changed, 'small'),
         "entityform/" . $entityform->identifier() . "/revisions/$revision->vid/view"
       );
 
