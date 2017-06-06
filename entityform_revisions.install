@@ -97,21 +97,6 @@ function entityform_revisions_uninstall() {
 }
 
 /**
- * Class EntityformRevisionsControllerInstall
- *
- * Class used to load an entity that may not have a revision yet
- * so it changes the entity query from using the INNER JOIN to a LEFT JOIN.
- */
-class EntityformRevisionsControllerInstall extends EntityformRevisionsController {
-  protected function buildQuery($ids, $conditions = [], $revision_id = FALSE) {
-    $query = parent::buildQuery($ids, $conditions, $revision_id);
-    $tables = &$query->getTables();
-    $tables['revision']['join type'] = 'LEFT OUTER';
-    return $query;
-  }
-}
-
-/**
  * Update an existing entityform to have a default revision
  *
  * @param $entityform_id
@@ -119,6 +104,23 @@ class EntityformRevisionsControllerInstall extends EntityformRevisionsController
  * @return array
  */
 function entityform_revisions_update_current_entityforms($entityform_id) {
+
+  if (class_exists('EntityformRevisionsController') && !class_exists('EntityformRevisionsControllerInstall')) {
+    /**
+     * Class EntityformRevisionsControllerInstall
+     *
+     * Class used to load an entity that may not have a revision yet
+     * so it changes the entity query from using the INNER JOIN to a LEFT JOIN.
+     */
+    class EntityformRevisionsControllerInstall extends EntityformRevisionsController {
+      protected function buildQuery($ids, $conditions = [], $revision_id = FALSE) {
+        $query = parent::buildQuery($ids, $conditions, $revision_id);
+        $tables = &$query->getTables();
+        $tables['revision']['join type'] = 'LEFT OUTER';
+        return $query;
+      }
+    }
+  }
 
   $controller = new EntityformRevisionsControllerInstall('entityform');
   $entities = $controller->load(array($entityform_id));
