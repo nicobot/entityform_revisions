@@ -169,11 +169,11 @@ function entityform_revisions_diff_diffs_show($entityform, $old_vid, $new_vid, $
 
   // Generate table header (date, username, log message).
   $old_header = t('!date by !username', array(
-    '!date' => l(format_date($old_entityform->revision_timestamp), "entityform/" . $old_entityform->identifier() . "/revisions/$old_entityform->vid/view", array('absolute' => 1)),
+    '!date' => l(format_date($old_entityform->revision_changed), "entityform/" . $old_entityform->identifier() . "/revisions/$old_entityform->vid/view", array('absolute' => 1)),
     '!username' => theme('username', array('account' => $revisions[$old_vid])),
   ));
   $new_header = t('!date by !username', array(
-    '!date' => l(format_date($new_entityform->revision_timestamp), "entityform/" . $new_entityform->identifier() . "/revisions/$new_entityform->vid/view", array('absolute' => 1)),
+    '!date' => l(format_date($new_entityform->revision_changed), "entityform/" . $new_entityform->identifier() . "/revisions/$new_entityform->vid/view", array('absolute' => 1)),
     '!username' => theme('username', array('account' => $revisions[$new_vid])),
   ));
 
