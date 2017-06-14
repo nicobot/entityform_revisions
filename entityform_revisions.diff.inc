@@ -177,8 +177,8 @@ function entityform_revisions_diff_diffs_show($entityform, $old_vid, $new_vid, $
     '!username' => theme('username', array('account' => $revisions[$new_vid])),
   ));
 
-  $old_log = $old_entityform->log != '' ? '<p class="revision-log">' . filter_xss($old_entityform->log) . '</p>' : '';
-  $new_log = $new_entityform->log != '' ? '<p class="revision-log">' . filter_xss($new_entityform->log) . '</p>' : '';
+  $old_log = !empty($old_entityform->log) ? '<p class="revision-log">' . filter_xss($old_entityform->log) . '</p>' : '';
+  $new_log = !empty($new_entityform->log) ? '<p class="revision-log">' . filter_xss($new_entityform->log) . '</p>' : '';
 
   // Generate previous diff/next diff links.
   $nav_suffix = ($default_state != $state) ? '/' . str_replace('_', '-', $state) : '';
